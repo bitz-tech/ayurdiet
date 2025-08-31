@@ -2,130 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ayurvedic Diet Management Design System - Inspired by natural, earthy Ayurvedic principles */
+/* Ayurvedic Diet Management Design System - Inspired by natural, fresh green Ayurvedic principles */
 
 @layer base {
   :root {
-    /* Base colors - Warm, natural palette */
-    --background: 35 20% 97%;
-    --foreground: 25 25% 15%;
+    /* Base colors - Fresh, natural green palette */
+    --background: 120 15% 98%;
+    --foreground: 120 25% 15%;
 
     /* Card system - Soft, natural containers */
-    --card: 35 25% 95%;
-    --card-foreground: 25 25% 15%;
+    --card: 120 20% 96%;
+    --card-foreground: 120 25% 15%;
 
     /* Popover system */
-    --popover: 35 25% 95%;
-    --popover-foreground: 25 25% 15%;
+    --popover: 120 20% 96%;
+    --popover-foreground: 120 25% 15%;
 
-    /* Primary - Warm terracotta/earth tone */
-    --primary: 15 65% 45%;
-    --primary-foreground: 35 25% 95%;
-    --primary-glow: 15 65% 55%;
+    /* Primary - Rich Ayurvedic green */
+    --primary: 120 45% 45%;
+    --primary-foreground: 120 15% 95%;
+    --primary-glow: 120 45% 55%;
 
     /* Secondary - Sage green for balance */
-    --secondary: 85 25% 75%;
-    --secondary-foreground: 25 25% 15%;
+    --secondary: 120 25% 75%;
+    --secondary-foreground: 120 25% 15%;
 
-    /* Muted tones - Soft neutrals */
-    --muted: 35 15% 88%;
-    --muted-foreground: 25 15% 45%;
+    /* Muted tones - Soft green neutrals */
+    --muted: 120 15% 88%;
+    --muted-foreground: 120 15% 45%;
 
-    /* Accent - Warm gold for highlights */
-    --accent: 45 85% 65%;
-    --accent-foreground: 25 25% 15%;
+    /* Accent - Fresh mint green for highlights */
+    --accent: 150 60% 65%;
+    --accent-foreground: 120 25% 15%;
 
     /* Ayurvedic-specific colors */
     --ayur-vata: 200 45% 65%;        /* Air - Cool blue */
     --ayur-pitta: 25 75% 55%;        /* Fire - Warm orange */
-    --ayur-kapha: 85 35% 55%;        /* Earth - Grounding green */
-    
-    /* Rasa colors */
-    --rasa-sweet: 45 85% 75%;        /* Sweet - Golden */
-    --rasa-sour: 55 75% 65%;         /* Sour - Citrus yellow */
+    --ayur-kapha: 120 40% 50%;       /* Earth - Rich green */
+
+    /* Rasa colors - Green-focused palette */
+    --rasa-sweet: 120 60% 70%;       /* Sweet - Light green */
+    --rasa-sour: 90 60% 65%;         /* Sour - Lime green */
     --rasa-salty: 180 25% 65%;       /* Salty - Ocean blue */
-    --rasa-bitter: 85 45% 35%;       /* Bitter - Deep green */
+    --rasa-bitter: 120 50% 35%;      /* Bitter - Deep forest green */
     --rasa-pungent: 0 75% 55%;       /* Pungent - Spicy red */
-    --rasa-astringent: 270 35% 55%;  /* Astringent - Purple */
+    --rasa-astringent: 120 30% 55%;  /* Astringent - Olive green */
 
     /* Status colors */
-    --success: 85 55% 45%;
-    --success-foreground: 35 25% 95%;
-    --warning: 45 85% 55%;
-    --warning-foreground: 25 25% 15%;
+    --success: 120 55% 45%;
+    --success-foreground: 120 15% 95%;
+    --warning: 60 85% 55%;
+    --warning-foreground: 120 25% 15%;
     --destructive: 0 75% 55%;
-    --destructive-foreground: 35 25% 95%;
+    --destructive-foreground: 120 15% 95%;
 
     /* Borders and inputs */
-    --border: 35 20% 85%;
-    --input: 35 20% 92%;
-    --ring: 15 65% 45%;
+    --border: 120 20% 85%;
+    --input: 120 20% 92%;
+    --ring: 120 45% 45%;
 
-    /* Gradients - Natural, flowing transitions */
+    /* Gradients - Natural, flowing green transitions */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-nature: linear-gradient(135deg, hsl(var(--ayur-kapha)), hsl(var(--accent)));
     --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
-    
-    /* Shadows - Soft, natural depth */
+
+    /* Shadows - Soft, natural green depth */
     --shadow-soft: 0 2px 8px hsl(var(--primary) / 0.1);
     --shadow-medium: 0 4px 16px hsl(var(--primary) / 0.15);
     --shadow-large: 0 8px 32px hsl(var(--primary) / 0.2);
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 120 15% 98%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-foreground: 120 25% 26%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 120 45% 45%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary-foreground: 120 15% 98%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 120 20% 95%;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent-foreground: 120 25% 15%;
 
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 120 20% 91%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 120 45% 45%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 120 15% 8%;
+    --foreground: 120 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 120 15% 10%;
+    --card-foreground: 120 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 120 15% 10%;
+    --popover-foreground: 120 20% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 120 60% 60%;
+    --primary-foreground: 120 15% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 120 20% 20%;
+    --secondary-foreground: 120 20% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 120 20% 20%;
+    --muted-foreground: 120 15% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 120 30% 25%;
+    --accent-foreground: 120 20% 95%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 120 20% 95%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 120 20% 20%;
+    --input: 120 20% 20%;
+    --ring: 120 60% 60%;
+    --sidebar-background: 120 15% 8%;
+    --sidebar-foreground: 120 20% 95%;
+    --sidebar-primary: 120 60% 60%;
+    --sidebar-primary-foreground: 120 15% 8%;
+    --sidebar-accent: 120 20% 20%;
+    --sidebar-accent-foreground: 120 20% 95%;
+    --sidebar-border: 120 20% 20%;
+    --sidebar-ring: 120 60% 60%;
   }
 }
 

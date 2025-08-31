@@ -75,6 +75,20 @@ export default {
 					pungent: 'hsl(var(--rasa-pungent))',
 					astringent: 'hsl(var(--rasa-astringent))'
 				},
+				// Additional green shades for better design flexibility
+				forest: {
+					50: 'hsl(120, 20%, 95%)',
+					100: 'hsl(120, 25%, 90%)',
+					200: 'hsl(120, 30%, 80%)',
+					300: 'hsl(120, 35%, 70%)',
+					400: 'hsl(120, 40%, 60%)',
+					500: 'hsl(120, 45%, 50%)',
+					600: 'hsl(120, 50%, 40%)',
+					700: 'hsl(120, 55%, 30%)',
+					800: 'hsl(120, 60%, 20%)',
+					900: 'hsl(120, 65%, 10%)',
+					950: 'hsl(120, 70%, 5%)'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
