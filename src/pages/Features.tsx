@@ -2,14 +2,14 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Leaf, 
-  Users, 
-  Heart, 
-  Shield, 
-  Brain, 
-  Calendar, 
-  ChefHat, 
+import {
+  Leaf,
+  Users,
+  Heart,
+  Shield,
+  Brain,
+  Calendar,
+  ChefHat,
   BarChart3,
   Smartphone,
   Globe,
@@ -94,32 +94,36 @@ export default function Features() {
   ];
 
   const categoryColors = {
-    "AI Technology": "bg-blue-100 text-blue-800",
-    "Collaboration": "bg-green-100 text-green-800",
-    "Knowledge Base": "bg-purple-100 text-purple-800",
-    "Analytics": "bg-orange-100 text-orange-800",
-    "Planning": "bg-indigo-100 text-indigo-800",
-    "Ayurveda": "bg-red-100 text-red-800",
-    "Security": "bg-gray-100 text-gray-800",
-    "Accessibility": "bg-cyan-100 text-cyan-800",
-    "Localization": "bg-pink-100 text-pink-800",
-    "Performance": "bg-yellow-100 text-yellow-800",
-    "Heritage": "bg-emerald-100 text-emerald-800"
+    "AI Technology": "bg-primary/10 text-primary border-primary/20",
+    "Collaboration": "bg-accent/10 text-accent-foreground border-accent/20",
+    "Knowledge Base": "bg-forest-100 text-forest-800 border-forest-200",
+    "Analytics": "bg-ayur-kapha/10 text-ayur-kapha border-ayur-kapha/20",
+    "Planning": "bg-forest-200 text-forest-900 border-forest-300",
+    "Ayurveda": "bg-ayur-pitta/10 text-ayur-pitta border-ayur-pitta/20",
+    "Security": "bg-muted text-muted-foreground border-border",
+    "Accessibility": "bg-forest-50 text-forest-700 border-forest-100",
+    "Localization": "bg-ayur-vata/10 text-ayur-vata border-ayur-vata/20",
+    "Performance": "bg-accent/20 text-accent-foreground border-accent/30",
+    "Heritage": "bg-primary/20 text-primary border-primary/30"
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-12">
+
+      <main className="container mx-auto px-4 py-12 relative">
+        {/* Subtle background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
+        <div className="relative z-10">
         {/* Hero Section */}
         <div className="text-center space-y-6 mb-16">
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center shadow-lg">
               <Zap className="h-10 w-10 text-primary" />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-foreground">Powerful Features</h1>
+          <div className="w-16 h-0.5 bg-gradient-to-r from-primary to-accent mx-auto rounded-full mb-4"></div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Discover how AyurDiet combines traditional Ayurvedic wisdom with cutting-edge technology to deliver personalized wellness solutions.
           </p>
@@ -130,15 +134,15 @@ export default function Features() {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 bg-card/50 backdrop-blur-sm">
                 <CardHeader>
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
                       <IconComponent className="h-6 w-6 text-primary" />
                     </div>
-                    <Badge 
-                      variant="secondary" 
-                      className={`${categoryColors[feature.category as keyof typeof categoryColors]} border-0`}
+                    <Badge
+                      variant="outline"
+                      className={`${categoryColors[feature.category as keyof typeof categoryColors]} font-medium`}
                     >
                       {feature.category}
                     </Badge>
@@ -155,24 +159,25 @@ export default function Features() {
 
         {/* Call to Action */}
         <div className="mt-16 text-center">
-          <Card className="max-w-2xl mx-auto">
+          <Card className="max-w-2xl mx-auto border-0 bg-gradient-to-br from-card/50 to-card/30 backdrop-blur-sm shadow-lg">
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold text-foreground mb-4">
                 Ready to Experience AyurDiet?
               </h2>
+              <div className="w-12 h-0.5 bg-gradient-to-r from-primary to-accent mx-auto rounded-full mb-4"></div>
               <p className="text-muted-foreground mb-6">
                 Join thousands of practitioners and patients who are already benefiting from personalized Ayurvedic nutrition.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
                   href="/"
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2"
+                  className="inline-flex items-center justify-center rounded-full text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-primary to-primary-glow text-primary-foreground hover:from-primary-glow hover:to-primary shadow-lg hover:shadow-xl hover:scale-105 h-12 px-8 py-3"
                 >
                   Get Started Today
                 </a>
                 <a
                   href="/about"
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2"
+                  className="inline-flex items-center justify-center rounded-full text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary/20 bg-background/50 hover:bg-accent/20 hover:text-accent-foreground backdrop-blur-sm h-12 px-8 py-3"
                 >
                   Learn More
                 </a>
@@ -180,8 +185,9 @@ export default function Features() {
             </CardContent>
           </Card>
         </div>
+        </div>
       </main>
-      
+
       <Footer />
     </div>
   );

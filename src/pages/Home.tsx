@@ -82,18 +82,18 @@ export default function Home() {
           email,
           password,
         });
-        
+
         if (error) throw error;
-        
+
         toast({
           title: "Welcome back!",
           description: "Successfully signed in to your account.",
         });
-        
+
         navigate("/dashboard");
       } else {
         const redirectUrl = `${window.location.origin}/dashboard`;
-        
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -105,9 +105,9 @@ export default function Home() {
             }
           }
         });
-        
+
         if (error) throw error;
-        
+
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account.",
@@ -123,10 +123,21 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar onLoginClick={() => setShowAuthDialog(true)} />
-      
+
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center bg-gradient-to-br from-background via-muted/10 to-accent/5">
-        <div className="container mx-auto px-6 py-16">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/hero-ayurveda.jpg)',
+          }}
+        />
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/85" />
+        {/* Additional green tint overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/3 to-forest-500/5" />
+        <div className="container mx-auto px-6 py-16 relative z-10">
           <div className="max-w-4xl mx-auto">
             {/* Main Hero Content */}
             <div className="text-center space-y-12">
@@ -134,15 +145,15 @@ export default function Home() {
                 {/* Logo/Icon */}
                 <div className="flex justify-center">
                   <div className="relative animate-fade-in">
-                    <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-primary/10">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary/30 to-accent/30 rounded-2xl flex items-center justify-center backdrop-blur-md border border-primary/20 shadow-lg">
                       <Leaf className="h-10 w-10 text-primary" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-accent to-accent/90 rounded-full flex items-center justify-center shadow-lg">
                       <Zap className="h-4 w-4 text-accent-foreground" />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Heading */}
                 <div className="space-y-6 animate-fade-in">
                   <div className="space-y-3">
@@ -154,7 +165,7 @@ export default function Home() {
                       Ancient Wisdom, Modern Science
                     </p>
                   </div>
-                  
+
                   <div className="max-w-xl mx-auto">
                     <h2 className="text-base md:text-lg text-muted-foreground font-normal leading-relaxed">
                       Personalized Ayurvedic diet plans powered by artificial intelligence
@@ -164,8 +175,8 @@ export default function Home() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center animate-fade-in">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="group relative overflow-hidden bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary text-primary-foreground border-0 px-8 py-3 h-auto text-sm font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     onClick={() => setShowAuthDialog(true)}
                   >
@@ -174,9 +185,9 @@ export default function Home() {
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </span>
                   </Button>
-                  <Button 
+                  <Button
                     variant="ghost"
-                    size="lg" 
+                    size="lg"
                     className="text-muted-foreground hover:text-foreground px-6 py-3 h-auto text-sm font-normal rounded-full transition-all duration-300 hover:bg-muted/50"
                     onClick={() => window.scrollTo({ top: window.innerHeight - 80, behavior: 'smooth' })}
                   >
@@ -188,7 +199,7 @@ export default function Home() {
 
             {/* Feature Cards */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 animate-fade-in">
-              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:-translate-y-1">
+              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/70 backdrop-blur-md hover:bg-card/90 hover:-translate-y-1 shadow-lg">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Stethoscope className="h-8 w-8 text-primary" />
@@ -201,8 +212,8 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:-translate-y-1">
+
+              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/70 backdrop-blur-md hover:bg-card/90 hover:-translate-y-1 shadow-lg">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-accent/10 to-accent/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Users className="h-8 w-8 text-accent-foreground" />
@@ -215,8 +226,8 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:-translate-y-1">
+
+              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/70 backdrop-blur-md hover:bg-card/90 hover:-translate-y-1 shadow-lg">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-ayur-kapha/10 to-ayur-kapha/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Brain className="h-8 w-8 text-foreground" />
@@ -229,8 +240,8 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:-translate-y-1">
+
+              <Card className="group hover:shadow-xl transition-all duration-500 border-0 bg-card/70 backdrop-blur-md hover:bg-card/90 hover:-translate-y-1 shadow-lg">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-ayur-pitta/10 to-ayur-pitta/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Shield className="h-8 w-8 text-foreground" />
@@ -258,7 +269,7 @@ export default function Home() {
               </h2>
               <div className="w-16 h-0.5 bg-gradient-to-r from-primary to-accent mx-auto rounded-full"></div>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8 text-center">
               <div className="space-y-3 group">
                 <AnimatedCounter end={500} suffix="+" />
@@ -288,7 +299,7 @@ export default function Home() {
               {isLogin ? "Welcome Back" : "Get Started"}
             </DialogTitle>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
@@ -303,7 +314,7 @@ export default function Home() {
                     placeholder="Enter your full name"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="role">I am a</Label>
                   <Select value={role} onValueChange={(value: "practitioner" | "patient") => setRole(value)}>
@@ -318,7 +329,7 @@ export default function Home() {
                 </div>
               </>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -330,7 +341,7 @@ export default function Home() {
                 placeholder="your@email.com"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -342,19 +353,19 @@ export default function Home() {
                 placeholder="Enter your password"
               />
             </div>
-            
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <button
               type="button"
