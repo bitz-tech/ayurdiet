@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { PricingSection } from "@/components/pricing/PricingSection";
 
 // Counter Animation Component
 function AnimatedCounter({ end, duration = 2000, suffix = "" }: { end: number; duration?: number; suffix?: string }) {
@@ -258,6 +259,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      <PricingSection onGetStarted={() => setShowAuthDialog(true)} />
 
       {/* Stats Section */}
       <section className="py-24 bg-gradient-to-br from-muted/20 to-card/30">

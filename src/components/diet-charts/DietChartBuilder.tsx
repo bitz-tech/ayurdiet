@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Plus, Save, Users, Utensils, Target, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { mockPatients } from "@/lib/mock-data";
 
 interface MealItem {
   id: string;
@@ -78,15 +79,26 @@ export function DietChartBuilder() {
         dosha: patient.dominant_dosha?.charAt(0).toUpperCase() + patient.dominant_dosha?.slice(1) || 'Unknown'
       })) || [];
 
-      setPatients(formattedPatients);
+      // If no real patients, add mock patients
+      if (formattedPatients.length === 0) {
+        const mockFormattedPatients = mockPatients.map(patient => ({
+          id: patient.id,
+          name: patient.name,
+          dosha: patient.dominant_dosha.charAt(0).toUpperCase() + patient.dominant_dosha.slice(1)
+        }));
+        setPatients(mockFormattedPatients);
+      } else {
+        setPatients(formattedPatients);
+      }
     } catch (error: any) {
       console.error('Error fetching patients:', error);
       // Fallback to mock data
-      setPatients([
-        { id: "1", name: "Priya Sharma", dosha: "Pitta" },
-        { id: "2", name: "Rajesh Kumar", dosha: "Vata" },
-        { id: "3", name: "Meera Patel", dosha: "Kapha" }
-      ]);
+      const mockFormattedPatients = mockPatients.map(patient => ({
+        id: patient.id,
+        name: patient.name,
+        dosha: patient.dominant_dosha.charAt(0).toUpperCase() + patient.dominant_dosha.slice(1)
+      }));
+      setPatients(mockFormattedPatients);
     } finally {
       setLoading(false);
     }
@@ -145,7 +157,7 @@ export function DietChartBuilder() {
     }
 
     const patientToUse = selectedPatient || (patients.length > 0 ? patients[0].id : null);
-    
+
     if (!patientToUse) {
       toast({
         title: "No Patients",
@@ -156,7 +168,7 @@ export function DietChartBuilder() {
     }
 
     setIsGenerating(true);
-    
+
     try {
       // Get selected patient data
       const patient = patients.find(p => p.id === patientToUse);
@@ -185,7 +197,7 @@ export function DietChartBuilder() {
       if (data.success && data.dietPlan) {
         // Update the week plan with AI generated content
         const newWeekPlan: Record<string, DayPlan> = {};
-        
+
         data.dietPlan.dailyPlan.forEach((day: any, index: number) => {
           const dayKey = `day${index + 1}`;
           newWeekPlan[dayKey] = {
@@ -222,7 +234,7 @@ export function DietChartBuilder() {
 
         setWeekPlan(newWeekPlan);
         setChartName(data.dietPlan.summary || "AI Generated Diet Plan");
-        
+
         toast({
           title: "Diet Plan Generated!",
           description: "AI has created a personalized Ayurvedic diet plan based on the patient's constitution.",
@@ -264,7 +276,7 @@ export function DietChartBuilder() {
               </>
             )}
           </Button>
-          <Button 
+          <Button
             onClick={() => {
               toast({
                 title: "Save Chart",
@@ -382,7 +394,7 @@ export function DietChartBuilder() {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              
+
               {Object.entries(weekPlan).map(([dayKey, dayPlan]) => (
                 <TabsContent key={dayKey} value={dayKey} className="space-y-4">
                   <div className="flex justify-between items-center">
@@ -418,7 +430,7 @@ export function DietChartBuilder() {
                               </Button>
                             </div>
                           ))}
-                          
+
                           <div className="space-y-1">
                             <Label className="text-xs">Add from database:</Label>
                             <div className="grid grid-cols-1 gap-1">

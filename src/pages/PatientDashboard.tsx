@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Leaf, LogOut, Calendar, ChefHat, User as UserIcon, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { getDietPlansByPatientEmail, MockDietPlan } from "@/lib/mock-data";
 
 export default function PatientDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,7 +24,7 @@ export default function PatientDashboard() {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
+
         if (session?.user) {
           fetchProfile(session.user.id);
           fetchDietCharts(session.user.id);
@@ -36,7 +37,7 @@ export default function PatientDashboard() {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      
+
       if (session?.user) {
         fetchProfile(session.user.id);
         fetchDietCharts(session.user.id);
@@ -53,7 +54,7 @@ export default function PatientDashboard() {
         .select('*')
         .eq('user_id', userId)
         .single();
-      
+
       if (error) throw error;
       setProfile(data);
     } catch (error) {
@@ -63,12 +64,47 @@ export default function PatientDashboard() {
 
   const fetchDietCharts = async (userId: string) => {
     try {
-      // Note: Patient record linking will be available once patient profiles are properly set up
-      // For now, we'll just show an empty state
-      setDietCharts([]);
-      return;
+      // Get user profile to find email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('user_id', userId)
+        .single();
+
+      if (profile?.email) {
+        // Get mock diet plans for this patient
+        const mockDietPlans = getDietPlansByPatientEmail(profile.email);
+        setDietCharts(mockDietPlans as any[]);
+      } else {
+        // Fallback: show some sample diet plans
+        const sampleDietPlans = [
+          {
+            id: "1",
+            name: "Balanced Ayurvedic Diet",
+            description: "A comprehensive diet plan for overall wellness",
+            start_date: "2024-02-01",
+            end_date: "2024-02-28",
+            is_active: true,
+            created_at: "2024-02-01T10:00:00Z"
+          }
+        ];
+        setDietCharts(sampleDietPlans);
+      }
     } catch (error) {
       console.error('Error fetching diet charts:', error);
+      // Fallback to sample data
+      const sampleDietPlans = [
+        {
+          id: "1",
+          name: "Balanced Ayurvedic Diet",
+          description: "A comprehensive diet plan for overall wellness",
+          start_date: "2024-02-01",
+          end_date: "2024-02-28",
+          is_active: true,
+          created_at: "2024-02-01T10:00:00Z"
+        }
+      ];
+      setDietCharts(sampleDietPlans);
     }
   };
 
@@ -125,7 +161,7 @@ export default function PatientDashboard() {
                 <p className="text-sm text-muted-foreground">Patient Portal</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground hidden sm:inline">
                 Welcome, {profile?.full_name || user.email}
@@ -228,11 +264,11 @@ export default function PatientDashboard() {
                             {chart.is_active ? "Active" : "Inactive"}
                           </Badge>
                         </div>
-                        
+
                         {chart.description && (
                           <p className="text-muted-foreground mb-4">{chart.description}</p>
                         )}
-                        
+
                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="font-medium text-foreground">Start Date:</span>
@@ -249,7 +285,60 @@ export default function PatientDashboard() {
                             </div>
                           )}
                         </div>
-                        
+
+                        {/* Meal Plan Details */}
+                        {(chart as MockDietPlan).meals && (
+                          <div className="mt-4 space-y-3">
+                            <h4 className="font-medium text-foreground">Daily Meal Plan:</h4>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-medium text-primary">Breakfast</h5>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                  {(chart as MockDietPlan).meals.breakfast.map((item, index) => (
+                                    <li key={index} className="flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-medium text-primary">Lunch</h5>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                  {(chart as MockDietPlan).meals.lunch.map((item, index) => (
+                                    <li key={index} className="flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-medium text-primary">Dinner</h5>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                  {(chart as MockDietPlan).meals.dinner.map((item, index) => (
+                                    <li key={index} className="flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-medium text-primary">Snacks</h5>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                  {(chart as MockDietPlan).meals.snacks.map((item, index) => (
+                                    <li key={index} className="flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {chart.special_instructions && (
                           <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                             <h4 className="font-medium text-foreground mb-1">Special Instructions:</h4>

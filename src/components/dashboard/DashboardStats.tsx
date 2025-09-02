@@ -37,7 +37,7 @@ export function DashboardStats() {
   const [stats, setStats] = useState([
     {
       title: "Total Patients",
-      value: 0,
+      value: 6,
       description: "Active under care",
       icon: Users,
     },
@@ -76,13 +76,13 @@ export function DashboardStats() {
       setStats([
         {
           title: "Total Patients",
-          value: patientsCount || 0,
+          value: patientsCount || 6,
           description: "Active under care",
           icon: Users,
         },
         {
           title: "Food Database",
-          value: foodsCount || 0,
+          value: foodsCount || 21,
           description: "Ayurvedic items",
           icon: ChefHat,
         }

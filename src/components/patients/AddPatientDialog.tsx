@@ -52,24 +52,87 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
       if (profileError) throw profileError;
       if (!profile) throw new Error("Practitioner profile not found. Please contact support.");
 
-      // First, create the patient auth account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: 'Ayur1234',
-        options: {
-          data: {
-            full_name: formData.name,
-            role: 'patient'
+      // Check if a patient account already exists with this email
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('user_id, role')
+        .eq('email', formData.email)
+        .maybeSingle();
+
+      if (profileCheckError) throw profileCheckError;
+
+      let patientUserId: string | null = null;
+      let isExistingPatient = false;
+
+      if (existingProfile) {
+        // Account already exists
+        if (existingProfile.role !== 'patient') {
+          throw new Error("An account with this email already exists but is not a patient account.");
+        }
+        patientUserId = existingProfile.user_id;
+        isExistingPatient = true;
+
+        // Check if patient is already linked to this practitioner
+        const { data: existingPatient, error: patientCheckError } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('user_id', patientUserId)
+          .eq('practitioner_id', profile.id)
+          .maybeSingle();
+
+        if (patientCheckError) throw patientCheckError;
+
+        if (existingPatient) {
+          throw new Error("This patient is already linked to your practice.");
+        }
+      } else {
+        // Create new patient auth account
+        // Note: The handle_new_user trigger defaults to 'practitioner' role if metadata is not properly set
+        // We work around this by verifying and correcting the role after creation
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: 'Ayur1234',
+          options: {
+            data: {
+              full_name: formData.name,
+              role: 'patient'
+            }
+          }
+        });
+
+        if (authError) throw authError;
+        patientUserId = authData.user?.id || null;
+
+        // Wait a moment for the trigger to create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Verify the profile was created with correct role
+        const { data: newProfile, error: profileVerifyError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', patientUserId)
+          .single();
+
+        if (profileVerifyError) throw profileVerifyError;
+
+        if (newProfile?.role !== 'patient') {
+          console.warn('Profile created with incorrect role:', newProfile?.role);
+          // Update the role if it's incorrect
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ role: 'patient' })
+            .eq('user_id', patientUserId);
+
+          if (updateError) {
+            console.error('Failed to update profile role:', updateError);
           }
         }
-      });
-
-      if (authError) throw authError;
+      }
 
       const patientData = {
         name: formData.name,
         email: formData.email,
-        user_id: authData.user?.id || null,
+        user_id: patientUserId,
         age: parseInt(formData.age),
         gender: formData.gender,
         weight: formData.weight ? parseFloat(formData.weight) : null,
@@ -91,9 +154,13 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
 
       if (error) throw error;
 
+      const message = isExistingPatient
+        ? `${formData.name} has been successfully linked to your practice.`
+        : `${formData.name} has been successfully added with email ${formData.email}. Default password: Ayur1234`;
+
       toast({
-        title: "Patient Added",
-        description: `${formData.name} has been successfully added with email ${formData.email}. Default password: Ayur1234`,
+        title: isExistingPatient ? "Patient Linked" : "Patient Added",
+        description: message,
       });
 
       setOpen(false);
@@ -137,7 +204,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
         <DialogHeader>
           <DialogTitle>Add New Patient</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -150,7 +217,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 placeholder="Enter patient's full name"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -162,7 +229,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 placeholder="Enter patient's email"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="age">Age *</Label>
               <Input
@@ -176,7 +243,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 max="120"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="gender">Gender *</Label>
               <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
@@ -190,7 +257,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="weight">Weight (kg)</Label>
               <Input
@@ -202,7 +269,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 step="0.1"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
               <Input
@@ -214,7 +281,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 step="0.1"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="dominant_dosha">Dominant Dosha</Label>
               <Select value={formData.dominant_dosha} onValueChange={(value) => setFormData({ ...formData, dominant_dosha: value })}>
@@ -228,7 +295,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="secondary_dosha">Secondary Dosha</Label>
               <Select value={formData.secondary_dosha} onValueChange={(value) => setFormData({ ...formData, secondary_dosha: value })}>
@@ -242,7 +309,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="meal_frequency">Meal Frequency (per day)</Label>
               <Select value={formData.meal_frequency} onValueChange={(value) => setFormData({ ...formData, meal_frequency: value })}>
@@ -258,7 +325,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="water_intake">Water Intake (liters/day)</Label>
               <Input
@@ -271,7 +338,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
                 min="0"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="bowel_movements">Bowel Movements (per day)</Label>
               <Select value={formData.bowel_movements} onValueChange={(value) => setFormData({ ...formData, bowel_movements: value })}>
@@ -287,7 +354,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
               </Select>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="allergies">Allergies (comma-separated)</Label>
             <Input
@@ -297,7 +364,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
               placeholder="e.g., nuts, dairy, gluten"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="medical_history">Medical History</Label>
             <Textarea
@@ -308,7 +375,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
               rows={3}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="notes">Additional Notes</Label>
             <Textarea
@@ -319,7 +386,7 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
               rows={3}
             />
           </div>
-          
+
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel

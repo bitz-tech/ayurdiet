@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, User, FileText, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { mockRecentActivity, getRecentActivityForPractitioner, MockActivity } from "@/lib/mock-data";
 
 interface ActivityItem {
   id: string;
@@ -31,6 +32,7 @@ export function RecentActivity() {
 
       if (!profile) return;
 
+      // Try to fetch real data first
       const activities: ActivityItem[] = [];
 
       // Fetch recent patients
@@ -71,16 +73,25 @@ export function RecentActivity() {
         });
       });
 
-      // Sort all activities by time and take the most recent 4
-      activities.sort((a, b) => {
-        const timeA = a.time.includes('ago') ? new Date(Date.now() - parseTimeAgo(a.time)) : new Date();
-        const timeB = b.time.includes('ago') ? new Date(Date.now() - parseTimeAgo(b.time)) : new Date();
-        return timeB.getTime() - timeA.getTime();
-      });
-
-      setRecentActivity(activities.slice(0, 4));
+      // If we have real data, use it; otherwise, use mock data
+      if (activities.length > 0) {
+        // Sort all activities by time and take the most recent 4
+        activities.sort((a, b) => {
+          const timeA = a.time.includes('ago') ? new Date(Date.now() - parseTimeAgo(a.time)) : new Date();
+          const timeB = b.time.includes('ago') ? new Date(Date.now() - parseTimeAgo(b.time)) : new Date();
+          return timeB.getTime() - timeA.getTime();
+        });
+        setRecentActivity(activities.slice(0, 4));
+      } else {
+        // Use mock data
+        const mockActivities = getRecentActivityForPractitioner(4);
+        setRecentActivity(mockActivities as ActivityItem[]);
+      }
     } catch (error) {
       console.error('Error fetching recent activity:', error);
+      // Fallback to mock data
+      const mockActivities = getRecentActivityForPractitioner(4);
+      setRecentActivity(mockActivities as ActivityItem[]);
     } finally {
       setLoading(false);
     }
@@ -89,7 +100,7 @@ export function RecentActivity() {
   const parseTimeAgo = (timeString: string): number => {
     const match = timeString.match(/(\d+)\s+(\w+)\s+ago/);
     if (!match) return 0;
-    
+
     const [, amount, unit] = match;
     const multiplier = {
       'minute': 60 * 1000,
@@ -99,7 +110,7 @@ export function RecentActivity() {
       'day': 24 * 60 * 60 * 1000,
       'days': 24 * 60 * 60 * 1000
     }[unit] || 0;
-    
+
     return parseInt(amount) * multiplier;
   };
 

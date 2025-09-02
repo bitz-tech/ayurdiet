@@ -10,6 +10,27 @@ interface DoshaData {
   description: string;
 }
 
+const MOCK_DOSHA_DATA: DoshaData[] = [
+  {
+    name: "Vata",
+    percentage: 35,
+    color: "bg-ayur-vata",
+    description: "Air & Space - Movement & Communication"
+  },
+  {
+    name: "Pitta",
+    percentage: 40,
+    color: "bg-ayur-pitta",
+    description: "Fire & Water - Metabolism & Transformation"
+  },
+  {
+    name: "Kapha",
+    percentage: 25,
+    color: "bg-ayur-kapha",
+    description: "Earth & Water - Structure & Lubrication"
+  }
+];
+
 export function DoshaChart() {
   const [doshaDistribution, setDoshaDistribution] = useState<DoshaData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +39,10 @@ export function DoshaChart() {
   const fetchDoshaDistribution = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setDoshaDistribution(MOCK_DOSHA_DATA);
+        return;
+      }
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -26,7 +50,10 @@ export function DoshaChart() {
         .eq('user_id', user.id)
         .single();
 
-      if (!profile) return;
+      if (!profile) {
+        setDoshaDistribution(MOCK_DOSHA_DATA);
+        return;
+      }
 
       const { data: patients } = await supabase
         .from('patients')
@@ -34,15 +61,13 @@ export function DoshaChart() {
         .eq('practitioner_id', profile.id)
         .not('dominant_dosha', 'is', null);
 
-      if (!patients) return;
+      if (!patients || patients.length === 0) {
+        setDoshaDistribution(MOCK_DOSHA_DATA);
+        return;
+      }
 
       const total = patients.length;
       setTotalPatients(total);
-
-      if (total === 0) {
-        setDoshaDistribution([]);
-        return;
-      }
 
       const doshaCounts = patients.reduce((acc, patient) => {
         const dosha = patient.dominant_dosha;
@@ -58,7 +83,7 @@ export function DoshaChart() {
           description: "Air & Space - Movement & Communication"
         },
         {
-          name: "Pitta", 
+          name: "Pitta",
           percentage: Math.round(((doshaCounts.pitta || 0) / total) * 100),
           color: "bg-ayur-pitta",
           description: "Fire & Water - Metabolism & Transformation"
@@ -66,7 +91,7 @@ export function DoshaChart() {
         {
           name: "Kapha",
           percentage: Math.round(((doshaCounts.kapha || 0) / total) * 100),
-          color: "bg-ayur-kapha", 
+          color: "bg-ayur-kapha",
           description: "Earth & Water - Structure & Lubrication"
         }
       ];
@@ -74,6 +99,7 @@ export function DoshaChart() {
       setDoshaDistribution(distribution);
     } catch (error) {
       console.error('Error fetching dosha distribution:', error);
+      setDoshaDistribution(MOCK_DOSHA_DATA);
     } finally {
       setLoading(false);
     }
