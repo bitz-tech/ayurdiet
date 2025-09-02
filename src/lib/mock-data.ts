@@ -135,7 +135,7 @@ export const mockPatients: MockPatient[] = [
     meal_frequency: 4,
     water_intake: 2.0,
     bowel_movements: 1,
-    email: "shreya.kutariyar@gmail.com",
+    email: "shreya.kutariyar@example.com",
     created_at: "2024-02-05T16:30:00Z"
   },
   {
@@ -153,7 +153,7 @@ export const mockPatients: MockPatient[] = [
     meal_frequency: 3,
     water_intake: 2.5,
     bowel_movements: 2,
-    email: "ebhattacharjya@gmail.com",
+    email: "eshita@example.com",
     created_at: "2024-02-10T13:45:00Z"
   }
 ];
@@ -190,7 +190,7 @@ export const mockRecentActivity: MockActivity[] = [
     title: "Diet Chart Created",
     description: "New diet plan \"Vata Pacifying Diet\" for Ijharul Haque",
     time: "3 days ago",
-    status: "pending"
+    status: "completed"
   },
   {
     id: "5",

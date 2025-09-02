@@ -39,20 +39,23 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
         
         if (error) throw error;
         
-        // Fetch user profile to determine role
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
+        // Force a brief delay to ensure auth state is fully updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get fresh user data after the delay
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData.user;
+        
+        // Always prioritize user_metadata role as it's the source of truth
+        const userRole = user?.user_metadata?.role;
         
         toast({
           title: "Welcome back!",
           description: "Successfully signed in to your account.",
         });
         
-        // Redirect based on role
-        if (profile?.role === 'patient') {
+        // Redirect based on role from user metadata
+        if (userRole === 'patient') {
           navigate('/patient-dashboard');
         } else {
           navigate('/dashboard');
@@ -75,13 +78,16 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
         
         // Since email confirmation is disabled, user is automatically signed in
         if (data.user) {
+          // Get the role from the user metadata that was just set
+          const userRole = data.user.user_metadata?.role || role;
+          
           toast({
             title: "Account created!",
             description: "Welcome to AyurDiet! Redirecting you now.",
           });
           
-          // Redirect based on role immediately
-          if (role === 'patient') {
+          // Redirect based on role from user metadata
+          if (userRole === 'patient') {
             navigate('/patient-dashboard');
           } else {
             navigate('/dashboard');

@@ -76,7 +76,6 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
@@ -86,20 +85,32 @@ export default function Home() {
 
         if (error) throw error;
 
+        // Force a brief delay to ensure auth state is fully updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Get fresh user data after the delay
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData.user;
+
+        // Always prioritize user_metadata role as it's the source of truth
+        const userRole = user?.user_metadata?.role;
+
         toast({
           title: "Welcome back!",
           description: "Successfully signed in to your account.",
         });
 
-        navigate("/dashboard");
+        // Redirect based on role from user metadata
+        if (userRole === 'patient') {
+          navigate('/patient-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        const redirectUrl = `${window.location.origin}/dashboard`;
-
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: redirectUrl,
             data: {
               full_name: fullName,
               role: role,
@@ -109,10 +120,23 @@ export default function Home() {
 
         if (error) throw error;
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        });
+        // Since email confirmation is disabled, user is automatically signed in
+        if (data.user) {
+          // Get the role from the user metadata that was just set
+          const userRole = data.user.user_metadata?.role || role;
+
+          toast({
+            title: "Account created!",
+            description: "Welcome to AyurDiet! Redirecting you now.",
+          });
+
+          // Redirect based on role from user metadata
+          if (userRole === 'patient') {
+            navigate('/patient-dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+        }
       }
     } catch (error: any) {
       setError(error.message);

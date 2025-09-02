@@ -13,19 +13,19 @@ interface DoshaData {
 const MOCK_DOSHA_DATA: DoshaData[] = [
   {
     name: "Vata",
-    percentage: 35,
+    percentage: 33,
     color: "bg-ayur-vata",
     description: "Air & Space - Movement & Communication"
   },
   {
     name: "Pitta",
-    percentage: 40,
+    percentage: 33,
     color: "bg-ayur-pitta",
     description: "Fire & Water - Metabolism & Transformation"
   },
   {
     name: "Kapha",
-    percentage: 25,
+    percentage: 33,
     color: "bg-ayur-kapha",
     description: "Earth & Water - Structure & Lubrication"
   }
