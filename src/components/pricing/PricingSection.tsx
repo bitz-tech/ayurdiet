@@ -30,7 +30,7 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
     },
     {
       name: "Professional",
-      price: "₹999",
+      price: "₹99",
       period: "month",
       description: "Advanced tools for serious practitioners and patients",
       icon: Crown,
@@ -101,11 +101,11 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
             {plans.map((plan, index) => {
               const IconComponent = plan.icon;
               return (
-                <Card 
+                <Card
                   key={plan.name}
                   className={`relative group transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${
-                    plan.popular 
-                      ? 'border-primary/50 shadow-lg shadow-primary/10 scale-105' 
+                    plan.popular
+                      ? 'border-primary/50 shadow-lg shadow-primary/10 scale-105'
                       : 'border-border hover:border-primary/30'
                   } ${!plan.available ? 'opacity-90' : ''}`}
                 >
@@ -116,7 +116,7 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
                       </Badge>
                     </div>
                   )}
-                  
+
                   {plan.badge && (
                     <div className="absolute top-4 right-4">
                       <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border border-accent/20">
@@ -128,16 +128,16 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
                   <CardHeader className="text-center pb-8">
                     <div className="flex justify-center mb-4">
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                        plan.popular 
-                          ? 'bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30' 
+                        plan.popular
+                          ? 'bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30'
                           : 'bg-gradient-to-br from-muted/50 to-card/50 border border-muted'
                       }`}>
                         <IconComponent className={`h-8 w-8 ${plan.popular ? 'text-primary' : 'text-muted-foreground'}`} />
                       </div>
                     </div>
-                    
+
                     <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
-                    
+
                     <div className="mb-4">
                       <div className="flex items-baseline justify-center">
                         <span className="text-4xl font-bold text-foreground">{plan.price}</span>
@@ -146,7 +146,7 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
                         )}
                       </div>
                     </div>
-                    
+
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {plan.description}
                     </p>
@@ -162,11 +162,11 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
                       ))}
                     </ul>
 
-                    <Button 
+                    <Button
                       className={`w-full ${
-                        plan.popular 
-                          ? 'bg-gradient-to-r from-primary to-accent hover:from-primary-glow hover:to-accent text-primary-foreground' 
-                          : plan.available 
+                        plan.popular
+                          ? 'bg-gradient-to-r from-primary to-accent hover:from-primary-glow hover:to-accent text-primary-foreground'
+                          : plan.available
                             ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
                             : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                       } transition-all duration-300 hover:scale-105 shadow-lg`}
@@ -200,7 +200,7 @@ export function PricingSection({ onGetStarted }: PricingSectionProps) {
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-0 bg-card/50 backdrop-blur-sm">
                 <CardContent className="p-6 text-center">
                   <Stethoscope className="h-8 w-8 text-accent mx-auto mb-4" />
