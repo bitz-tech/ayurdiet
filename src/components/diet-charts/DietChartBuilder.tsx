@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Plus, Save, Users, Utensils, Target, Loader2 } from "lucide-react";
+import { Calendar, Plus, Save, Users, Utensils, Target, Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { mockPatients } from "@/lib/mock-data";
+import { FoodSearchDialog } from "./FoodSearchDialog";
 
 interface MealItem {
   id: string;
@@ -39,6 +40,11 @@ export function DietChartBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFoodSearch, setShowFoodSearch] = useState(false);
+  const [currentSearchContext, setCurrentSearchContext] = useState<{
+    dayKey: string;
+    mealType: keyof DayPlan;
+  } | null>(null);
   const { toast } = useToast();
 
   const [weekPlan, setWeekPlan] = useState<Record<string, DayPlan>>({
@@ -150,6 +156,127 @@ export function DietChartBuilder() {
     }));
   };
 
+  const openFoodSearch = (dayKey: string, mealType: keyof DayPlan) => {
+    setCurrentSearchContext({ dayKey, mealType });
+    setShowFoodSearch(true);
+  };
+
+  const handleFoodAdd = (meal: MealItem) => {
+    if (currentSearchContext) {
+      addMealToDay(currentSearchContext.dayKey, currentSearchContext.mealType, meal);
+    }
+  };
+
+  const closeFoodSearch = () => {
+    setShowFoodSearch(false);
+    setCurrentSearchContext(null);
+  };
+
+  const saveDietChart = async () => {
+    if (!selectedPatient) {
+      toast({
+        title: "No Patient Selected",
+        description: "Please select a patient before saving the diet chart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!chartName.trim()) {
+      toast({
+        title: "Chart Name Required",
+        description: "Please provide a name for the diet chart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get current user's profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { data: practitionerProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!practitionerProfile) throw new Error("Practitioner profile not found");
+
+      // Get patient email for linking
+      const selectedPatientData = patients.find(p => p.id === selectedPatient);
+      let patientId = selectedPatient;
+      let patientEmail = '';
+
+      // Try to get patient data from database
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('id, email')
+        .eq('id', selectedPatient)
+        .single();
+
+      if (patientData) {
+        patientId = patientData.id;
+        patientEmail = patientData.email;
+      } else {
+        // For mock patients, use a default email format
+        patientEmail = `${selectedPatientData?.name?.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+      }
+
+      // Convert weekPlan to the format expected by the database (as JSON)
+      const mealsData = JSON.stringify({
+        weekly_plan: weekPlan
+      });
+
+      // Save diet chart to database
+      const { data, error } = await supabase
+        .from('diet_charts')
+        .insert({
+          patient_id: patientId,
+          practitioner_id: practitionerProfile.id,
+          name: chartName,
+          description: description || null,
+          start_date: startDate || new Date().toISOString().split('T')[0],
+          end_date: endDate || null,
+          meals: mealsData,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Diet Chart Saved",
+        description: `Diet chart "${chartName}" has been saved successfully for ${selectedPatientData?.name}`,
+      });
+
+      // Reset form
+      setChartName("");
+      setDescription("");
+      setStartDate("");
+      setEndDate("");
+      setWeekPlan({
+        day1: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+        day2: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+        day3: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+        day4: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+        day5: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+        day6: { breakfast: [], lunch: [], dinner: [], snacks: [] },
+        day7: { breakfast: [], lunch: [], dinner: [], snacks: [] }
+      });
+
+    } catch (error: any) {
+      console.error('Error saving diet chart:', error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save diet chart. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const generateAIPlan = async () => {
     // Auto-select first patient if none selected
     if (!selectedPatient && patients.length > 0) {
@@ -170,25 +297,52 @@ export function DietChartBuilder() {
     setIsGenerating(true);
 
     try {
-      // Get selected patient data
-      const patient = patients.find(p => p.id === patientToUse);
-      if (!patient) throw new Error("Patient not found");
+      // Fetch complete patient data from database
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', patientToUse)
+        .single();
 
-      // Call the Gemini AI edge function
+      if (patientError || !patientData) {
+        throw new Error("Failed to fetch patient details");
+      }
+
+      // Fetch food database for AI context
+      const { data: foodsData, error: foodsError } = await supabase
+        .from('foods')
+        .select('name, category, rasas, calories, protein, carbohydrates, fat, dosha_effects, digestibility, virya')
+        .limit(100); // Get top 100 foods for AI context
+
+      if (foodsError) {
+        console.warn("Failed to fetch foods data:", foodsError);
+      }
+
+      console.log('Generating AI plan with patient data:', patientData);
+      console.log('Available foods for AI:', foodsData?.length || 0);
+
+      // Call the Gemini AI edge function with complete patient data
       const { data, error } = await supabase.functions.invoke('generate-diet-plan', {
         body: {
           patient: {
-            name: patient.name,
-            age: 30, // Mock data - would come from actual patient record
-            gender: patient.dosha === "Pitta" ? "Female" : "Male",
-            dominantDosha: patient.dosha.toLowerCase(),
-            mealFrequency: 3,
-            bowelMovements: 1
+            name: patientData.name,
+            age: patientData.age,
+            gender: patientData.gender,
+            weight: patientData.weight,
+            height: patientData.height,
+            dominantDosha: patientData.dominant_dosha,
+            secondaryDosha: patientData.secondary_dosha,
+            medicalHistory: patientData.medical_history,
+            allergies: patientData.allergies,
+            mealFrequency: patientData.meal_frequency || 3,
+            waterIntake: patientData.water_intake,
+            bowelMovements: patientData.bowel_movements || 1
           },
-          duration: 7,
+          duration: 7, // Always 7 days for weekly plan
           preferences: [],
-          restrictions: [],
-          goals: description || "General wellness and dosha balance"
+          restrictions: patientData.allergies || [],
+          goals: description || "General wellness and dosha balance",
+          availableFoods: foodsData || []
         }
       });
 
@@ -276,14 +430,7 @@ export function DietChartBuilder() {
               </>
             )}
           </Button>
-          <Button
-            onClick={() => {
-              toast({
-                title: "Save Chart",
-                description: "Diet chart saved successfully!",
-              });
-            }}
-          >
+          <Button onClick={saveDietChart}>
             <Save className="h-4 w-4 mr-2" />
             Save Chart
           </Button>
@@ -431,21 +578,34 @@ export function DietChartBuilder() {
                             </div>
                           ))}
 
-                          <div className="space-y-1">
-                            <Label className="text-xs">Add from database:</Label>
-                            <div className="grid grid-cols-1 gap-1">
-                              {sampleMeals.slice(0, 3).map(meal => (
-                                <Button
-                                  key={meal.id}
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => addMealToDay(dayKey, mealType, meal)}
-                                  className="justify-start text-xs h-8"
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  {meal.name}
-                                </Button>
-                              ))}
+                          <div className="space-y-2">
+                            {/* Food Database Search Button */}
+                            <Button
+                              onClick={() => openFoodSearch(dayKey, mealType)}
+                              size="sm"
+                              className="w-full h-8"
+                            >
+                              <Search className="h-3 w-3 mr-2" />
+                              Search Food Database
+                            </Button>
+                            
+                            {/* Quick Add Sample Meals */}
+                            <div className="space-y-1">
+                              <Label className="text-xs">Quick add samples:</Label>
+                              <div className="grid grid-cols-1 gap-1">
+                                {sampleMeals.slice(0, 2).map(meal => (
+                                  <Button
+                                    key={meal.id}
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => addMealToDay(dayKey, mealType, meal)}
+                                    className="justify-start text-xs h-6 text-muted-foreground"
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    {meal.name}
+                                  </Button>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -482,6 +642,14 @@ export function DietChartBuilder() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Food Search Dialog */}
+      <FoodSearchDialog
+        isOpen={showFoodSearch}
+        onClose={closeFoodSearch}
+        onAddFood={handleFoodAdd}
+        mealType={currentSearchContext?.mealType || 'meal'}
+      />
     </div>
   );
 }

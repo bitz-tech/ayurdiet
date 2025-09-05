@@ -52,87 +52,24 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
       if (profileError) throw profileError;
       if (!profile) throw new Error("Practitioner profile not found. Please contact support.");
 
-      // Check if a patient account already exists with this email
-      const { data: existingProfile, error: profileCheckError } = await supabase
-        .from('profiles')
-        .select('user_id, role')
+      // We no longer create auth accounts for patients; simply link by email.
+      // Prevent duplicates for the same practitioner.
+      const { data: existingPatient, error: existingPatientErr } = await supabase
+        .from('patients')
+        .select('id')
         .eq('email', formData.email)
+        .eq('practitioner_id', profile.id)
         .maybeSingle();
 
-      if (profileCheckError) throw profileCheckError;
-
-      let patientUserId: string | null = null;
-      let isExistingPatient = false;
-
-      if (existingProfile) {
-        // Account already exists
-        if (existingProfile.role !== 'patient') {
-          throw new Error("An account with this email already exists but is not a patient account.");
-        }
-        patientUserId = existingProfile.user_id;
-        isExistingPatient = true;
-
-        // Check if patient is already linked to this practitioner
-        const { data: existingPatient, error: patientCheckError } = await supabase
-          .from('patients')
-          .select('id')
-          .eq('user_id', patientUserId)
-          .eq('practitioner_id', profile.id)
-          .maybeSingle();
-
-        if (patientCheckError) throw patientCheckError;
-
-        if (existingPatient) {
-          throw new Error("This patient is already linked to your practice.");
-        }
-      } else {
-        // Create new patient auth account
-        // Note: The handle_new_user trigger defaults to 'practitioner' role if metadata is not properly set
-        // We work around this by verifying and correcting the role after creation
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: 'Ayur1234',
-          options: {
-            data: {
-              full_name: formData.name,
-              role: 'patient'
-            }
-          }
-        });
-
-        if (authError) throw authError;
-        patientUserId = authData.user?.id || null;
-
-        // Wait a moment for the trigger to create the profile
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Verify the profile was created with correct role
-        const { data: newProfile, error: profileVerifyError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', patientUserId)
-          .single();
-
-        if (profileVerifyError) throw profileVerifyError;
-
-        if (newProfile?.role !== 'patient') {
-          console.warn('Profile created with incorrect role:', newProfile?.role);
-          // Update the role if it's incorrect
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ role: 'patient' })
-            .eq('user_id', patientUserId);
-
-          if (updateError) {
-            console.error('Failed to update profile role:', updateError);
-          }
-        }
+      if (existingPatientErr) throw existingPatientErr;
+      if (existingPatient) {
+        throw new Error("This patient is already linked to your practice.");
       }
 
       const patientData = {
         name: formData.name,
         email: formData.email,
-        user_id: patientUserId,
+        user_id: null,
         age: parseInt(formData.age),
         gender: formData.gender,
         weight: formData.weight ? parseFloat(formData.weight) : null,
@@ -154,12 +91,10 @@ export function AddPatientDialog({ onPatientAdded }: AddPatientDialogProps) {
 
       if (error) throw error;
 
-      const message = isExistingPatient
-        ? `${formData.name} has been successfully linked to your practice.`
-        : `${formData.name} has been successfully added with email ${formData.email}. Default password: Ayur1234`;
+      const message = `${formData.name} has been added to your patients.`;
 
       toast({
-        title: isExistingPatient ? "Patient Linked" : "Patient Added",
+        title: "Patient Added",
         description: message,
       });
 

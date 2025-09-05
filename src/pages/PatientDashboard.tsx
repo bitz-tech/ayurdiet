@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Leaf, LogOut, Calendar, ChefHat, User as UserIcon, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AuthForm } from "@/components/auth/AuthForm";
-import { getDietPlansByPatientEmail, MockDietPlan } from "@/lib/mock-data";
 
 export default function PatientDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -67,45 +66,68 @@ export default function PatientDashboard() {
       // Get user profile to find email
       const { data: profile } = await supabase
         .from('profiles')
-        .select('email')
+        .select('email, role')
         .eq('user_id', userId)
         .single();
 
       if (profile?.email) {
-        // Get mock diet plans for this patient
-        const mockDietPlans = getDietPlansByPatientEmail(profile.email);
-        setDietCharts(mockDietPlans as any[]);
-      } else {
-        // Fallback: show some sample diet plans
-        const sampleDietPlans = [
-          {
-            id: "1",
-            name: "Balanced Ayurvedic Diet",
-            description: "A comprehensive diet plan for overall wellness",
-            start_date: "2024-02-01",
-            end_date: "2024-02-28",
-            is_active: true,
-            created_at: "2024-02-01T10:00:00Z"
-          }
-        ];
-        setDietCharts(sampleDietPlans);
+        console.log('Looking for diet charts for patient email:', profile.email);
+        
+        // Query diet charts with patient email join
+        const { data: charts, error } = await supabase
+          .from('diet_charts')
+          .select(`
+            id,
+            name,
+            description,
+            start_date,
+            end_date,
+            is_active,
+            created_at,
+            special_instructions,
+            meals,
+            patient_id,
+            patients!inner(email, name),
+            practitioner:profiles!diet_charts_practitioner_id_fkey(full_name)
+          `)
+          .eq('patients.email', profile.email)
+          .order('created_at', { ascending: false });
+          
+        console.log('Diet charts query result:', { charts, error });
+
+        if (error) {
+          console.error('Error fetching diet charts:', error);
+        } else if (charts && charts.length > 0) {
+          // Transform database format to display format
+          const transformedCharts = charts.map(chart => {
+            let parsedMeals = null;
+            try {
+              const mealsData = typeof chart.meals === 'string' ? JSON.parse(chart.meals) : chart.meals;
+              if (mealsData && mealsData.weekly_plan) {
+                parsedMeals = mealsData.weekly_plan;
+              }
+            } catch (e) {
+              console.error('Error parsing meals data:', e);
+            }
+
+            return {
+              ...chart,
+              meals: parsedMeals,
+              practitioner: chart.practitioner || { full_name: 'Practitioner' }
+            };
+          });
+          setDietCharts(transformedCharts);
+        }
       }
     } catch (error) {
       console.error('Error fetching diet charts:', error);
-      // Fallback to sample data
-      const sampleDietPlans = [
-        {
-          id: "1",
-          name: "Balanced Ayurvedic Diet",
-          description: "A comprehensive diet plan for overall wellness",
-          start_date: "2024-02-01",
-          end_date: "2024-02-28",
-          is_active: true,
-          created_at: "2024-02-01T10:00:00Z"
-        }
-      ];
-      setDietCharts(sampleDietPlans);
     }
+  };
+
+  // Helper function to format day label
+  const formatDayLabel = (day: string) => {
+    const dayNumber = day.replace('day', '');
+    return `Day ${dayNumber}`;
   };
 
   const handleSignOut = async () => {
@@ -257,7 +279,7 @@ export default function PatientDashboard() {
                           <div>
                             <h3 className="font-semibold text-foreground">{chart.name}</h3>
                             <p className="text-sm text-muted-foreground">
-                              Created by: {chart.practitioner?.full_name || 'Unknown Practitioner'}
+                              Created by: {chart.practitioner?.full_name || 'Unknown Practitioner'} (Practitioner)
                             </p>
                           </div>
                           <Badge variant={chart.is_active ? "default" : "secondary"}>
@@ -286,55 +308,123 @@ export default function PatientDashboard() {
                           )}
                         </div>
 
-                        {/* Meal Plan Details */}
-                        {(chart as MockDietPlan).meals && (
-                          <div className="mt-4 space-y-3">
-                            <h4 className="font-medium text-foreground">Daily Meal Plan:</h4>
-                            <div className="grid md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <h5 className="text-sm font-medium text-primary">Breakfast</h5>
-                                <ul className="text-sm text-muted-foreground space-y-1">
-                                  {(chart as MockDietPlan).meals.breakfast.map((item, index) => (
-                                    <li key={index} className="flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                                      {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <div className="space-y-2">
-                                <h5 className="text-sm font-medium text-primary">Lunch</h5>
-                                <ul className="text-sm text-muted-foreground space-y-1">
-                                  {(chart as MockDietPlan).meals.lunch.map((item, index) => (
-                                    <li key={index} className="flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                                      {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <div className="space-y-2">
-                                <h5 className="text-sm font-medium text-primary">Dinner</h5>
-                                <ul className="text-sm text-muted-foreground space-y-1">
-                                  {(chart as MockDietPlan).meals.dinner.map((item, index) => (
-                                    <li key={index} className="flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                                      {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <div className="space-y-2">
-                                <h5 className="text-sm font-medium text-primary">Snacks</h5>
-                                <ul className="text-sm text-muted-foreground space-y-1">
-                                  {(chart as MockDietPlan).meals.snacks.map((item, index) => (
-                                    <li key={index} className="flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                                      {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
+                        {/* Weekly Meal Plan Details */}
+                        {chart.meals && (
+                          <div className="mt-4 space-y-4">
+                            <h4 className="font-medium text-foreground">Weekly Meal Plan:</h4>
+                            <div className="space-y-4">
+                              {Object.entries(chart.meals).map(([day, dayMeals]: [string, any]) => (
+                                <Card key={day} className="bg-muted/20 border-primary/20">
+                                  <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg text-primary">
+                                      {formatDayLabel(day)}
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="space-y-3">
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                      {/* Breakfast */}
+                                      <div className="space-y-2">
+                                        <h5 className="text-sm font-medium text-primary">Breakfast</h5>
+                                        <ul className="text-sm text-muted-foreground space-y-1">
+                                          {dayMeals.breakfast?.map((item: any, index: number) => (
+                                            <li key={index} className="flex items-start gap-2">
+                                              <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                                              <div>
+                                                <div className="font-medium">{item.name}</div>
+                                                {item.quantity && (
+                                                  <div className="text-xs text-muted-foreground">
+                                                    Quantity: {item.quantity}
+                                                  </div>
+                                                )}
+                                                {item.instructions && (
+                                                  <div className="text-xs text-muted-foreground italic">
+                                                    {item.instructions}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      
+                                      {/* Lunch */}
+                                      <div className="space-y-2">
+                                        <h5 className="text-sm font-medium text-primary">Lunch</h5>
+                                        <ul className="text-sm text-muted-foreground space-y-1">
+                                          {dayMeals.lunch?.map((item: any, index: number) => (
+                                            <li key={index} className="flex items-start gap-2">
+                                              <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                                              <div>
+                                                <div className="font-medium">{item.name}</div>
+                                                {item.quantity && (
+                                                  <div className="text-xs text-muted-foreground">
+                                                    Quantity: {item.quantity}
+                                                  </div>
+                                                )}
+                                                {item.instructions && (
+                                                  <div className="text-xs text-muted-foreground italic">
+                                                    {item.instructions}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      
+                                      {/* Dinner */}
+                                      <div className="space-y-2">
+                                        <h5 className="text-sm font-medium text-primary">Dinner</h5>
+                                        <ul className="text-sm text-muted-foreground space-y-1">
+                                          {dayMeals.dinner?.map((item: any, index: number) => (
+                                            <li key={index} className="flex items-start gap-2">
+                                              <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                                              <div>
+                                                <div className="font-medium">{item.name}</div>
+                                                {item.quantity && (
+                                                  <div className="text-xs text-muted-foreground">
+                                                    Quantity: {item.quantity}
+                                                  </div>
+                                                )}
+                                                {item.instructions && (
+                                                  <div className="text-xs text-muted-foreground italic">
+                                                    {item.instructions}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      
+                                      {/* Snacks */}
+                                      <div className="space-y-2">
+                                        <h5 className="text-sm font-medium text-primary">Snacks</h5>
+                                        <ul className="text-sm text-muted-foreground space-y-1">
+                                          {dayMeals.snacks?.map((item: any, index: number) => (
+                                            <li key={index} className="flex items-start gap-2">
+                                              <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                                              <div>
+                                                <div className="font-medium">{item.name}</div>
+                                                {item.quantity && (
+                                                  <div className="text-xs text-muted-foreground">
+                                                    Quantity: {item.quantity}
+                                                  </div>
+                                                )}
+                                                {item.instructions && (
+                                                  <div className="text-xs text-muted-foreground italic">
+                                                    {item.instructions}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
                             </div>
                           </div>
                         )}
