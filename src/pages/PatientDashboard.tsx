@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Leaf, LogOut, Calendar, ChefHat, User as UserIcon, Heart } from "lucide-react";
+import { Leaf, LogOut, Calendar, ChefHat, User as UserIcon, Heart, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AuthForm } from "@/components/auth/AuthForm";
 
@@ -73,7 +73,7 @@ export default function PatientDashboard() {
       if (profile?.email) {
         console.log('Looking for diet charts for patient email:', profile.email);
         
-        // Query diet charts with patient email join
+        // Query diet charts with practitioner details in a single query
         const { data: charts, error } = await supabase
           .from('diet_charts')
           .select(`
@@ -87,17 +87,21 @@ export default function PatientDashboard() {
             special_instructions,
             meals,
             patient_id,
+            practitioner_id,
             patients!inner(email, name),
-            practitioner:profiles!diet_charts_practitioner_id_fkey(full_name)
+            practitioner:profiles!diet_charts_practitioner_id_fkey(id, full_name, email)
           `)
           .eq('patients.email', profile.email)
           .order('created_at', { ascending: false });
           
         console.log('Diet charts query result:', { charts, error });
+        console.log('Charts with practitioner data:', charts?.map(c => ({ 
+          id: c.id, 
+          practitioner_name: c.practitioner?.full_name,
+          practitioner_email: c.practitioner?.email 
+        })));
 
-        if (error) {
-          console.error('Error fetching diet charts:', error);
-        } else if (charts && charts.length > 0) {
+        if (charts && charts.length > 0) {
           // Transform database format to display format
           const transformedCharts = charts.map(chart => {
             let parsedMeals = null;
@@ -113,10 +117,15 @@ export default function PatientDashboard() {
             return {
               ...chart,
               meals: parsedMeals,
-              practitioner: chart.practitioner || { full_name: 'Practitioner' }
+              practitioner: chart.practitioner || { full_name: 'Unknown Practitioner', email: null }
             };
           });
+          
           setDietCharts(transformedCharts);
+        }
+
+        if (error) {
+          console.error('Error fetching diet charts:', error);
         }
       }
     } catch (error) {
@@ -275,17 +284,31 @@ export default function PatientDashboard() {
                   {dietCharts.map((chart) => (
                     <Card key={chart.id} className="border-l-4 border-l-primary">
                       <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-semibold text-foreground">{chart.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Created by: {chart.practitioner?.full_name || 'Unknown Practitioner'} (Practitioner)
-                            </p>
-                          </div>
-                          <Badge variant={chart.is_active ? "default" : "secondary"}>
-                            {chart.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
+                         <div className="flex justify-between items-start mb-4">
+                           <div>
+                             <h3 className="font-semibold text-foreground">{chart.name}</h3>
+                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                               <span>
+                                 Created by: {chart.practitioner?.full_name || 'Unknown Practitioner'} (Practitioner)
+                               </span>
+                               {chart.practitioner?.email && (
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   className="h-auto p-1 text-primary hover:text-primary/80"
+                                   asChild
+                                 >
+                                   <a href={`mailto:${chart.practitioner.email}?subject=Question about my diet plan: ${chart.name}`}>
+                                     <Mail className="h-4 w-4" />
+                                   </a>
+                                 </Button>
+                               )}
+                             </div>
+                           </div>
+                           <Badge variant={chart.is_active ? "default" : "secondary"}>
+                             {chart.is_active ? "Active" : "Inactive"}
+                           </Badge>
+                         </div>
 
                         {chart.description && (
                           <p className="text-muted-foreground mb-4">{chart.description}</p>

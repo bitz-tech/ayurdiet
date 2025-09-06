@@ -382,7 +382,15 @@ export function DietChartBuilder() {
               carbs: 45,
               fat: 8
             })) || [],
-            snacks: []
+            snacks: day.meals.snacks?.items?.map((item: any, idx: number) => ({
+              id: `ai-snacks-${idx}`,
+              name: item.name,
+              quantity: item.quantity,
+              calories: 100,
+              protein: 4,
+              carbs: 10,
+              fat: 2
+            })) || []
           };
         });
 
@@ -588,7 +596,7 @@ export function DietChartBuilder() {
                               <Search className="h-3 w-3 mr-2" />
                               Search Food Database
                             </Button>
-                            
+
                             {/* Quick Add Sample Meals */}
                             <div className="space-y-1">
                               <Label className="text-xs">Quick add samples:</Label>

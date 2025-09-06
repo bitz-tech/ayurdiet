@@ -76,7 +76,7 @@ Please provide a detailed ${duration}-day diet plan that:
 7. Considers seasonal appropriateness
 8. Respects any allergies and restrictions
 9. MUST generate exactly ${duration} days of meal plans (day 1 through day ${duration})
-10. Each day must include breakfast, lunch, and dinner with proper quantities
+10. Each day must include breakfast, lunch, snacks and dinner with proper quantities
 
 Format your response as a JSON object with this structure:
 {
@@ -103,7 +103,7 @@ Format your response as a JSON object with this structure:
         "snacks": {
           "items": [{"name": "Snack item", "quantity": "Amount", "benefits": "Ayurvedic benefits"}],
           "timing": "Mid-morning/afternoon",
-          "instructions": "When and how to consume"
+          "instructions": "Preparation/consumption notes"
         }
       },
       "dailyTotals": {
@@ -127,7 +127,7 @@ Format your response as a JSON object with this structure:
 
 Only return valid JSON. Do not include any markdown formatting or additional text.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -142,7 +142,8 @@ Only return valid JSON. Do not include any markdown formatting or additional tex
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 32768,
+          candidateCount: 1,
         }
       }),
     });
@@ -161,7 +162,7 @@ Only return valid JSON. Do not include any markdown formatting or additional tex
     }
 
     const generatedText = data.candidates[0].content.parts[0].text;
-    
+
     // Parse the JSON response
     let dietPlan;
     try {
@@ -173,8 +174,8 @@ Only return valid JSON. Do not include any markdown formatting or additional tex
       throw new Error('Failed to parse AI response as JSON');
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return new Response(JSON.stringify({
+      success: true,
       dietPlan,
       metadata: {
         patientName: patient.name,
@@ -187,8 +188,8 @@ Only return valid JSON. Do not include any markdown formatting or additional tex
 
   } catch (error) {
     console.error('Error in generate-diet-plan function:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
+    return new Response(JSON.stringify({
+      success: false,
       error: error.message,
       details: 'Please check the function logs for more information'
     }), {
